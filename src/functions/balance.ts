@@ -23,50 +23,56 @@ export function balanceSubscribe(
   const abortController = new AbortController();
   // Keep track of the slot of the last-published update.
   let lastUpdateSlot = -1n;
+
   // Fetch the current balance of this account.
-  rpc
-    .getBalance(address, { commitment: "confirmed" })
-    .send({ abortSignal: abortController.signal })
-    .then(({ context: { slot }, value: lamports }) => {
+  (async () => {
+    try {
+      const { context: { slot }, value: lamports } = await rpc
+        .getBalance(address, { commitment: "confirmed" })
+        .send({ abortSignal: abortController.signal });
+
       if (slot < lastUpdateSlot) {
         // The last-published update (ie. from the subscription) is newer than this one.
         return;
       }
       lastUpdateSlot = slot;
       next(null /* err */, lamports /* data */);
-    })
-    .catch((e) => {
-      if (e !== EXPLICIT_ABORT_TOKEN) {
-        next(e /* err */);
+    } catch (error) {
+      if (error !== EXPLICIT_ABORT_TOKEN) {
+        next(error);
       }
-    });
+    }
+  })();
+
   // Subscribe for updates to that balance.
-  rpcSubscriptions
-    .accountNotifications(address)
-    .subscribe({ abortSignal: abortController.signal })
-    .then(async (accountInfoNotifications) => {
+  (async () => {
+    try {
+      const accountInfoNotifications = await rpcSubscriptions
+        .accountNotifications(address)
+        .subscribe({ abortSignal: abortController.signal });
+
       try {
         for await (const {
           context: { slot },
           value: { lamports },
         } of accountInfoNotifications) {
           if (slot < lastUpdateSlot) {
-            // The last-published update (ie. from the initial fetch) is newer than this
-            // one.
+            // The last-published update (ie. from the initial fetch) is newer than this one.
             continue;
           }
           lastUpdateSlot = slot;
           next(null /* err */, lamports /* data */);
         }
-      } catch (e) {
-        next(e /* err */);
+      } catch (error) {
+        next(error);
       }
-    })
-    .catch((e) => {
-      if (e !== EXPLICIT_ABORT_TOKEN) {
-        next(e /* err */);
+    } catch (error) {
+      if (error !== EXPLICIT_ABORT_TOKEN) {
+        next(error);
       }
-    });
+    }
+  })();
+
   // Return a cleanup callback that aborts the RPC call/subscription.
   return () => {
     abortController.abort(EXPLICIT_ABORT_TOKEN);
