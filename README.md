@@ -16,7 +16,6 @@ Start a server in development mode.
 ```shell
 npm install
 npm run compile:js
-npm run compile:typedefs
 npm dev
 ```
 
