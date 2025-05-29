@@ -9,7 +9,7 @@ import { WalletMenuItemContent } from "./WalletMenuItemContent";
 type Props = Readonly<{
   onAccountSelect(account: UiWalletAccount | undefined): void;
   onDisconnect(wallet: UiWallet): void;
-  onError(err: unknown): void;
+  onError(error: unknown): void;
   wallet: UiWallet;
 }>;
 
@@ -34,8 +34,8 @@ export function ConnectWalletMenuItem({ onAccountSelect, onDisconnect, onError, 
       if (nextAccounts[0]) {
         onAccountSelect(nextAccounts[0]);
       }
-    } catch (e) {
-      onError(e);
+    } catch (error) {
+      onError(error);
     }
   }, [connect, onAccountSelect, onError, wallet.accounts]);
   return (
@@ -68,8 +68,8 @@ export function ConnectWalletMenuItem({ onAccountSelect, onDisconnect, onError, 
         </DropdownMenu.RadioGroup>
         <DropdownMenu.Separator />
         <DropdownMenu.Item
-          onSelect={async (e) => {
-            e.preventDefault();
+          onSelect={async (event) => {
+            event.preventDefault();
             await handleConnectClick();
           }}
         >
@@ -77,13 +77,13 @@ export function ConnectWalletMenuItem({ onAccountSelect, onDisconnect, onError, 
         </DropdownMenu.Item>
         <DropdownMenu.Item
           color="red"
-          onSelect={async (e) => {
-            e.preventDefault();
+          onSelect={async (event) => {
+            event.preventDefault();
             try {
               await disconnect();
               onDisconnect(wallet);
-            } catch (e) {
-              onError(e);
+            } catch (error) {
+              onError(error);
             }
           }}
         >

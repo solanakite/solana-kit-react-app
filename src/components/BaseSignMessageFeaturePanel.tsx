@@ -20,16 +20,16 @@ export function BaseSignMessageFeaturePanel({ signMessage }: Props) {
   return (
     <Flex asChild gap="2" direction={{ initial: "column", sm: "row" }} style={{ width: "100%" }}>
       <form
-        onSubmit={async (e) => {
-          e.preventDefault();
+        onSubmit={async (event) => {
+          event.preventDefault();
           setError(NO_ERROR);
           setIsSigningMessage(true);
           try {
             const signature = await signMessage(new TextEncoder().encode(text));
             setLastSignature(signature);
-          } catch (e) {
+          } catch (error) {
             setLastSignature(undefined);
-            setError(e);
+            setError(error);
           } finally {
             setIsSigningMessage(false);
           }
@@ -38,7 +38,7 @@ export function BaseSignMessageFeaturePanel({ signMessage }: Props) {
         <Box flexGrow="1">
           <TextField.Root
             placeholder="Write a message to sign"
-            onChange={(e: SyntheticEvent<HTMLInputElement>) => setText(e.currentTarget.value)}
+            onChange={(event: SyntheticEvent<HTMLInputElement>) => setText(event.currentTarget.value)}
             value={text}
           >
             <TextField.Slot>
@@ -61,8 +61,8 @@ export function BaseSignMessageFeaturePanel({ signMessage }: Props) {
           </Dialog.Trigger>
           {lastSignature ? (
             <Dialog.Content
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={(event) => {
+                event.stopPropagation();
               }}
             >
               <Dialog.Title>You Signed a Message!</Dialog.Title>

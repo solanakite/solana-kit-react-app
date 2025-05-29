@@ -6,7 +6,7 @@ import React, { useCallback, useState } from "react";
 import { WalletMenuItemContent } from "./WalletMenuItemContent";
 
 type Props = Readonly<{
-  onError(err: unknown): void;
+  onError(error: unknown): void;
   onSignIn(account: UiWalletAccount | undefined): void;
   wallet: UiWallet;
 }>;
@@ -15,8 +15,8 @@ export function SignInMenuItem({ onSignIn, onError, wallet }: Props) {
   const signIn = useSignIn(wallet);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const handleSignInClick = useCallback(
-    async (e: React.MouseEvent) => {
-      e.preventDefault();
+    async (event: React.MouseEvent) => {
+      event.preventDefault();
       try {
         setIsSigningIn(true);
         try {
@@ -27,8 +27,8 @@ export function SignInMenuItem({ onSignIn, onError, wallet }: Props) {
         } finally {
           setIsSigningIn(false);
         }
-      } catch (e) {
-        onError(e);
+      } catch (error) {
+        onError(error);
       }
     },
     [signIn, onSignIn, onError],

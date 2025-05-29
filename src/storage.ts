@@ -21,8 +21,8 @@ function guard<TArgs extends unknown[], TReturn, TFallbackReturn>(
   return (...args) => {
     try {
       return fn(...args);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       return fallbackReturn;
     }
   };

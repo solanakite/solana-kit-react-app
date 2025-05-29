@@ -64,8 +64,8 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
   return (
     <Flex asChild gap="2" direction={{ initial: "column", sm: "row" }} style={{ width: "100%" }}>
       <form
-        onSubmit={async (e) => {
-          e.preventDefault();
+        onSubmit={async (event) => {
+          event.preventDefault();
           setError(NO_ERROR);
           setIsSendingTransaction(true);
           try {
@@ -76,16 +76,16 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
             const { value: latestBlockhash } = await rpc.getLatestBlockhash({ commitment: "confirmed" }).send();
             const message = pipe(
               createTransactionMessage({ version: 0 }),
-              (m) => setTransactionMessageFeePayerSigner(transactionSendingSigner, m),
-              (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
-              (m) =>
+              (message) => setTransactionMessageFeePayerSigner(transactionSendingSigner, message),
+              (message) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, message),
+              (message) =>
                 appendTransactionMessageInstruction(
                   getTransferSolInstruction({
                     amount,
                     destination: address(recipientAccount.address),
                     source: transactionSendingSigner,
                   }),
-                  m,
+                  message,
                 ),
             );
             assertIsTransactionMessageWithSingleSendingSigner(message);
@@ -94,9 +94,9 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
             void mutate({ address: recipientAccount.address, chain: currentChain });
             setLastSignature(signature);
             setSolQuantityString("");
-          } catch (e) {
+          } catch (error) {
             setLastSignature(undefined);
-            setError(e);
+            setError(error);
           } finally {
             setIsSendingTransaction(false);
           }
@@ -109,7 +109,7 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
                 disabled={isSendingTransaction}
                 id={lamportsInputId}
                 placeholder="Amount"
-                onChange={(e: SyntheticEvent<HTMLInputElement>) => setSolQuantityString(e.currentTarget.value)}
+                onChange={(event: SyntheticEvent<HTMLInputElement>) => setSolQuantityString(event.currentTarget.value)}
                 style={{ width: "auto" }}
                 type="number"
                 value={solQuantityString}
@@ -168,8 +168,8 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
           </Dialog.Trigger>
           {lastSignature ? (
             <Dialog.Content
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={(event) => {
+                event.stopPropagation();
               }}
             >
               <Dialog.Title>You transferred tokens!</Dialog.Title>

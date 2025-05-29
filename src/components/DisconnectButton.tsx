@@ -35,8 +35,8 @@ export function DisconnectButton({
           setLastError(NO_ERROR);
           try {
             await disconnect();
-          } catch (e) {
-            setLastError(e);
+          } catch (error) {
+            setLastError(error);
           }
         }}
         variant="outline"
