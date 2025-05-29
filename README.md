@@ -15,7 +15,6 @@ Start a server in development mode.
 
 ```shell
 npm install
-npm run compile:js
 npm dev
 ```
 
@@ -27,7 +26,7 @@ Build a static bundle and HTML for deployment to a webserver.
 
 ```shell
 npm install
-npm turbo build
+npm run build
 ```
 
 The contents of the `dist/` directory can now be uploaded to a webserver.
