@@ -36,6 +36,7 @@ export function DisconnectButton({
           try {
             await disconnect();
           } catch (error) {
+            // @ts-expect-error - error is unknown. TODO: fix this.
             setLastError(error);
           }
         }}
