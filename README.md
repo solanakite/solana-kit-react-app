@@ -1,6 +1,9 @@
-# @solana/example-react-app
+# *Working* Solana Kit wallet connection example.
 
 This is an example of how to use `@solana/kit` and `@solana/react` to build a React web application.
+
+> [!NOTE]  
+> This is forked from [Anza's Solana Kit React App](https://github.com/anza-xyz/kit/tree/main/examples/react-app), turned into a standalone example and with *all the bugs* fixed (see the GitHub changelog).
 
 ## Features
 
