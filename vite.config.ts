@@ -15,7 +15,9 @@ function replaceProcessEnv(mode: string): Plugin {
 export default defineConfig(({ mode }) => ({
   base: process.env.REACT_EXAMPLE_APP_BASE_PATH,
   define: {
-    "process.env": process.env,
+    "process.env": {
+      REACT_EXAMPLE_APP_ENABLE_MAINNET: JSON.stringify(process.env.REACT_EXAMPLE_APP_ENABLE_MAINNET),
+    },
   },
   plugins: [react(), replaceProcessEnv(mode)],
 }));
