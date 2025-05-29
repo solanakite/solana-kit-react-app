@@ -14,9 +14,10 @@ This is an example of how to use `@solana/kit` and `@solana/react` to build a Re
 Start a server in development mode.
 
 ```shell
-pnpm install
-pnpm turbo compile:js compile:typedefs
-pnpm dev
+npm install
+npm run compile:js
+npm run compile:typedefs
+npm dev
 ```
 
 Press <kbd>o</kbd> + <kbd>Enter</kbd> to open the app in a browser. Edits to the source code will automatically reload the app.
@@ -26,8 +27,8 @@ Press <kbd>o</kbd> + <kbd>Enter</kbd> to open the app in a browser. Edits to the
 Build a static bundle and HTML for deployment to a webserver.
 
 ```shell
-pnpm install
-pnpm turbo build
+npm install
+npm turbo build
 ```
 
 The contents of the `dist/` directory can now be uploaded to a webserver.
@@ -37,6 +38,6 @@ The contents of the `dist/` directory can now be uploaded to a webserver.
 Access to this cluster is typically blocked by [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) rules, so it is disabled in the example app by default. To enable it, start the server or compile the application with the `REACT_EXAMPLE_APP_ENABLE_MAINNET` environment variable set to `"true"`.
 
 ```shell
-REACT_EXAMPLE_APP_ENABLE_MAINNET=true pnpm dev
-REACT_EXAMPLE_APP_ENABLE_MAINNET=true pnpm build
+REACT_EXAMPLE_APP_ENABLE_MAINNET=true npm dev
+REACT_EXAMPLE_APP_ENABLE_MAINNET=true npm build
 ```
