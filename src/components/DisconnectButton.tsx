@@ -21,7 +21,7 @@ export function DisconnectButton({
       content={
         <>
           Error:{" "}
-          {lastError && typeof lastError === "object" && "message" in lastError ? lastError.message : String(lastError)}
+          {lastError && typeof lastError === "object" && "message" in lastError ? (lastError as { message: string }).message : String(lastError)}
         </>
       }
       open={lastError !== NO_ERROR}
