@@ -1,5 +1,5 @@
-import { AccountNotificationsApi, Address, GetBalanceApi, Lamports, Rpc, RpcSubscriptions } from '@solana/kit';
-import { SWRSubscription } from 'swr/subscription';
+import { AccountNotificationsApi, Address, GetBalanceApi, Lamports, Rpc, RpcSubscriptions } from "@solana/kit";
+import { SWRSubscription } from "swr/subscription";
 
 const EXPLICIT_ABORT_TOKEN = Symbol();
 
@@ -15,59 +15,60 @@ const EXPLICIT_ABORT_TOKEN = Symbol();
  * higher slot (ie. is newer) than the last one you published to the consumer.
  */
 export function balanceSubscribe(
-    rpc: Rpc<GetBalanceApi>,
-    rpcSubscriptions: RpcSubscriptions<AccountNotificationsApi>,
-    ...subscriptionArgs: Parameters<SWRSubscription<{ address: Address }, Lamports>>
+  rpc: Rpc<GetBalanceApi>,
+  rpcSubscriptions: RpcSubscriptions<AccountNotificationsApi>,
+  ...subscriptionArgs: Parameters<SWRSubscription<{ address: Address }, Lamports>>
 ) {
-    const [{ address }, { next }] = subscriptionArgs;
-    const abortController = new AbortController();
-    // Keep track of the slot of the last-published update.
-    let lastUpdateSlot = -1n;
-    // Fetch the current balance of this account.
-    rpc.getBalance(address, { commitment: 'confirmed' })
-        .send({ abortSignal: abortController.signal })
-        .then(({ context: { slot }, value: lamports }) => {
-            if (slot < lastUpdateSlot) {
-                // The last-published update (ie. from the subscription) is newer than this one.
-                return;
-            }
-            lastUpdateSlot = slot;
-            next(null /* err */, lamports /* data */);
-        })
-        .catch(e => {
-            if (e !== EXPLICIT_ABORT_TOKEN) {
-                next(e /* err */);
-            }
-        });
-    // Subscribe for updates to that balance.
-    rpcSubscriptions
-        .accountNotifications(address)
-        .subscribe({ abortSignal: abortController.signal })
-        .then(async accountInfoNotifications => {
-            try {
-                for await (const {
-                    context: { slot },
-                    value: { lamports },
-                } of accountInfoNotifications) {
-                    if (slot < lastUpdateSlot) {
-                        // The last-published update (ie. from the initial fetch) is newer than this
-                        // one.
-                        continue;
-                    }
-                    lastUpdateSlot = slot;
-                    next(null /* err */, lamports /* data */);
-                }
-            } catch (e) {
-                next(e /* err */);
-            }
-        })
-        .catch(e => {
-            if (e !== EXPLICIT_ABORT_TOKEN) {
-                next(e /* err */);
-            }
-        });
-    // Return a cleanup callback that aborts the RPC call/subscription.
-    return () => {
-        abortController.abort(EXPLICIT_ABORT_TOKEN);
-    };
+  const [{ address }, { next }] = subscriptionArgs;
+  const abortController = new AbortController();
+  // Keep track of the slot of the last-published update.
+  let lastUpdateSlot = -1n;
+  // Fetch the current balance of this account.
+  rpc
+    .getBalance(address, { commitment: "confirmed" })
+    .send({ abortSignal: abortController.signal })
+    .then(({ context: { slot }, value: lamports }) => {
+      if (slot < lastUpdateSlot) {
+        // The last-published update (ie. from the subscription) is newer than this one.
+        return;
+      }
+      lastUpdateSlot = slot;
+      next(null /* err */, lamports /* data */);
+    })
+    .catch((e) => {
+      if (e !== EXPLICIT_ABORT_TOKEN) {
+        next(e /* err */);
+      }
+    });
+  // Subscribe for updates to that balance.
+  rpcSubscriptions
+    .accountNotifications(address)
+    .subscribe({ abortSignal: abortController.signal })
+    .then(async (accountInfoNotifications) => {
+      try {
+        for await (const {
+          context: { slot },
+          value: { lamports },
+        } of accountInfoNotifications) {
+          if (slot < lastUpdateSlot) {
+            // The last-published update (ie. from the initial fetch) is newer than this
+            // one.
+            continue;
+          }
+          lastUpdateSlot = slot;
+          next(null /* err */, lamports /* data */);
+        }
+      } catch (e) {
+        next(e /* err */);
+      }
+    })
+    .catch((e) => {
+      if (e !== EXPLICIT_ABORT_TOKEN) {
+        next(e /* err */);
+      }
+    });
+  // Return a cleanup callback that aborts the RPC call/subscription.
+  return () => {
+    abortController.abort(EXPLICIT_ABORT_TOKEN);
+  };
 }
