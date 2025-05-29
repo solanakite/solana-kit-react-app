@@ -96,8 +96,7 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
             setSolQuantityString("");
           } catch (error) {
             setLastSignature(undefined);
-            // @ts-expect-error - error is unknown. TODO: fix this.
-            setError(error);
+            setError(error as unknown as symbol);
           } finally {
             setIsSendingTransaction(false);
           }
