@@ -1,5 +1,6 @@
-import { AccountNotificationsApi, Address, GetBalanceApi, Lamports, Rpc, RpcSubscriptions } from "@solana/kit";
+import { Address, Lamports } from "@solana/kit";
 import { SWRSubscription } from "swr/subscription";
+import { Connection } from "solana-kite";
 
 const EXPLICIT_ABORT_TOKEN = Symbol();
 
@@ -15,8 +16,7 @@ const EXPLICIT_ABORT_TOKEN = Symbol();
  * higher slot (ie. is newer) than the last one you published to the consumer.
  */
 export function balanceSubscribe(
-  rpc: Rpc<GetBalanceApi>,
-  rpcSubscriptions: RpcSubscriptions<AccountNotificationsApi>,
+  connection: Connection,
   ...subscriptionArgs: Parameters<SWRSubscription<{ address: Address }, Lamports>>
 ) {
   const [{ address }, { next }] = subscriptionArgs;
@@ -27,7 +27,7 @@ export function balanceSubscribe(
   // Fetch the current balance of this account.
   (async () => {
     try {
-      const { context: { slot }, value: lamports } = await rpc
+      const { context: { slot }, value: lamports } = await connection.rpc
         .getBalance(address, { commitment: "confirmed" })
         .send({ abortSignal: abortController.signal });
 
@@ -47,7 +47,7 @@ export function balanceSubscribe(
   // Subscribe for updates to that balance.
   (async () => {
     try {
-      const accountInfoNotifications = await rpcSubscriptions
+      const accountInfoNotifications = await connection.rpcSubscriptions
         .accountNotifications(address)
         .subscribe({ abortSignal: abortController.signal });
 

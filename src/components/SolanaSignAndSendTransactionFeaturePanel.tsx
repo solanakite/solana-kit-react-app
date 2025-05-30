@@ -19,7 +19,7 @@ import { useContext, useId, useMemo, useRef, useState } from "react";
 import { useSWRConfig } from "swr";
 
 import { ChainContext } from "../context/ChainContext";
-import { RpcContext } from "../context/RpcContext";
+import { ConnectionContext } from "../context/ConnectionContext";
 import { ErrorDialog } from "./ErrorDialog";
 import { WalletMenuItemContent } from "./WalletMenuItemContent";
 
@@ -39,7 +39,7 @@ function solStringToLamports(solQuantityString: string) {
 export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
   const { mutate } = useSWRConfig();
   const { current: NO_ERROR } = useRef(Symbol());
-  const { rpc } = useContext(RpcContext);
+  const { connection } = useContext(ConnectionContext);
   const wallets = useWallets();
   const [isSendingTransaction, setIsSendingTransaction] = useState(false);
   const [error, setError] = useState(NO_ERROR);
@@ -73,23 +73,22 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
             if (!recipientAccount) {
               throw new Error("The address of the recipient could not be found");
             }
-            const { value: latestBlockhash } = await rpc.getLatestBlockhash({ commitment: "confirmed" }).send();
-            const message = pipe(
-              createTransactionMessage({ version: 0 }),
-              (message) => setTransactionMessageFeePayerSigner(transactionSendingSigner, message),
-              (message) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, message),
-              (message) =>
-                appendTransactionMessageInstruction(
-                  getTransferSolInstruction({
-                    amount,
-                    destination: address(recipientAccount.address),
-                    source: transactionSendingSigner,
-                  }),
-                  message,
-                ),
-            );
-            assertIsTransactionMessageWithSingleSendingSigner(message);
-            const signature = await signAndSendTransactionMessageWithSigners(message);
+
+            const sendSolInstruction = getTransferSolInstruction({
+              amount,
+              destination: address(recipientAccount.address),
+              source: transactionSendingSigner,
+            });
+
+            const signatureBase58 = await connection.sendTransactionFromInstructionsWithWalletApp({
+              instructions: [sendSolInstruction],
+              feePayer: transactionSendingSigner,
+            });
+
+            // TODO: Normally we would consider 'signature' to be base58, this existing app uses 
+            // bytes, we should probably just fix this app.
+            const signature = connection.signatureBase58StringToBytes(signatureBase58);
+
             void mutate({ address: transactionSendingSigner.address, chain: currentChain });
             void mutate({ address: recipientAccount.address, chain: currentChain });
             setLastSignature(signature);
@@ -149,7 +148,7 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
           </Flex>
         </Box>
         <Dialog.Root
-          open={!!lastSignature}
+          open={Boolean(lastSignature)}
           onOpenChange={(open) => {
             if (!open) {
               setLastSignature(undefined);
