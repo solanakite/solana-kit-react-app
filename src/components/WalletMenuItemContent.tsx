@@ -11,7 +11,7 @@ type Props = Readonly<{
 export function WalletMenuItemContent({ children, loading, wallet }: Props) {
   return (
     <Flex align="center" gap="2">
-      <Spinner loading={!!loading}>
+      <Spinner loading={Boolean(loading)}>
         <Avatar
           fallback={<Text size="1">{wallet.name.slice(0, 1)}</Text>}
           radius="none"

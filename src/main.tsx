@@ -7,7 +7,7 @@ import { createRoot } from "react-dom/client";
 
 import { Nav } from "./components/Nav.tsx";
 import { ChainContextProvider } from "./context/ChainContextProvider.tsx";
-import { RpcContextProvider } from "./context/RpcContextProvider.tsx";
+import { ConnectionContextProvider } from "./context/ConnectionContextProvider.tsx";
 import { SelectedWalletAccountContextProvider } from "./context/SelectedWalletAccountContextProvider.tsx";
 import Root from "./routes/root.tsx";
 
@@ -18,14 +18,14 @@ root.render(
     <Theme>
       <ChainContextProvider>
         <SelectedWalletAccountContextProvider>
-          <RpcContextProvider>
+          <ConnectionContextProvider>
             <Flex direction="column">
               <Nav />
               <Section>
                 <Root />
               </Section>
             </Flex>
-          </RpcContextProvider>
+          </ConnectionContextProvider>
         </SelectedWalletAccountContextProvider>
       </ChainContextProvider>
     </Theme>

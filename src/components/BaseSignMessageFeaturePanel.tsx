@@ -47,7 +47,7 @@ export function BaseSignMessageFeaturePanel({ signMessage }: Props) {
           </TextField.Root>
         </Box>
         <Dialog.Root
-          open={!!lastSignature}
+          open={Boolean(lastSignature)}
           onOpenChange={(open) => {
             if (!open) {
               setLastSignature(undefined);
