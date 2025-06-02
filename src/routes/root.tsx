@@ -5,7 +5,6 @@ import { ErrorBoundary } from "react-error-boundary";
 
 import { Balance } from "../components/Balance";
 import { FeatureNotSupportedCallout } from "../components/FeatureNotSupportedCallout";
-import { FeaturePanel } from "../components/FeaturePanel";
 import { SolanaSignAndSendTransactionFeaturePanel } from "../components/SolanaSignAndSendTransactionFeaturePanel";
 import { SolanaSignMessageFeaturePanel } from "../components/SolanaSignMessageFeaturePanel";
 import { WalletAccountIcon } from "../components/WalletAccountIcon";
@@ -46,18 +45,12 @@ function Root() {
               </ErrorBoundary>
             </Flex>
           </Flex>
-          <DataList.Root orientation={{ initial: "vertical", sm: "horizontal" }} size="3">
-            <FeaturePanel label="Sign Message">
-              <ErrorBoundary FallbackComponent={FeatureNotSupportedCallout} resetKeys={errorBoundaryResetKeys}>
-                <SolanaSignMessageFeaturePanel account={selectedWalletAccount} />
-              </ErrorBoundary>
-            </FeaturePanel>
-            <FeaturePanel label="Sign And Send Transaction">
-              <ErrorBoundary FallbackComponent={FeatureNotSupportedCallout} resetKeys={errorBoundaryResetKeys}>
-                <SolanaSignAndSendTransactionFeaturePanel account={selectedWalletAccount} />
-              </ErrorBoundary>
-            </FeaturePanel>
-          </DataList.Root>
+          <ErrorBoundary FallbackComponent={FeatureNotSupportedCallout} resetKeys={errorBoundaryResetKeys}>
+            <SolanaSignMessageFeaturePanel account={selectedWalletAccount} />
+          </ErrorBoundary>
+          <ErrorBoundary FallbackComponent={FeatureNotSupportedCallout} resetKeys={errorBoundaryResetKeys}>
+            <SolanaSignAndSendTransactionFeaturePanel account={selectedWalletAccount} />
+          </ErrorBoundary>
         </Flex>
       ) : (
         <Text as="p">Click &ldquo;Connect Wallet&rdquo; to get started.</Text>

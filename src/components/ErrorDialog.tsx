@@ -1,6 +1,4 @@
-import { AlertDialog, Blockquote, Button, Flex } from "@radix-ui/themes";
-import { useState } from "react";
-
+import { useEffect, useRef } from "react";
 import { getErrorMessage } from "../errors";
 
 type Props = Readonly<{
@@ -10,29 +8,55 @@ type Props = Readonly<{
 }>;
 
 export function ErrorDialog({ error, onClose, title }: Props) {
-  const [isOpen, setIsOpen] = useState(true);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) {
+      dialog.showModal();
+    }
+  }, []);
+
   return (
-    <AlertDialog.Root
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) {
-          if (!onClose || onClose() !== false) {
-            setIsOpen(false);
-          }
+    <dialog
+      ref={dialogRef}
+      onClose={() => {
+        if (!onClose || onClose() !== false) {
+          dialogRef.current?.close();
         }
       }}
+      style={{
+        padding: '24px',
+        borderRadius: '8px',
+        border: '1px solid #ccc',
+        maxWidth: '90vw',
+        maxHeight: '90vh',
+        overflow: 'auto'
+      }}
     >
-      <AlertDialog.Content>
-        <AlertDialog.Title color="red">{title ?? "We encountered the following error"}</AlertDialog.Title>
-        <AlertDialog.Description>
-          <Blockquote>{getErrorMessage(error, "Unknown")}</Blockquote>
-        </AlertDialog.Description>
-        <Flex mt="4" justify="end">
-          <AlertDialog.Action>
-            <Button variant="solid">Close</Button>
-          </AlertDialog.Action>
-        </Flex>
-      </AlertDialog.Content>
-    </AlertDialog.Root>
+      <h2 style={{ color: 'red', margin: '0 0 16px 0' }}>{title ?? "We encountered the following error"}</h2>
+      <div>
+        <blockquote style={{
+          borderLeft: '4px solid #ccc',
+          margin: '8px 0',
+          padding: '8px 16px',
+          fontStyle: 'italic'
+        }}>{getErrorMessage(error, "Unknown")}</blockquote>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+        <button
+          onClick={() => dialogRef.current?.close()}
+          style={{
+            padding: '8px 16px',
+            border: 'none',
+            borderRadius: '4px',
+            backgroundColor: '#f5f5f5',
+            cursor: 'pointer'
+          }}
+        >
+          Close
+        </button>
+      </div>
+    </dialog>
   );
 }
