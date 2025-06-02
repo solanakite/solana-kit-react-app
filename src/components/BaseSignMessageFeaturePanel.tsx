@@ -8,14 +8,14 @@ import { useRef, useState } from "react";
 import { ErrorDialog } from "../components/ErrorDialog";
 
 type Props = Readonly<{
-  signMessage(message: string): Promise<ReadonlyUint8Array>;
+  signMessage(message: string): Promise<string>;
 }>;
 
 export function BaseSignMessageFeaturePanel({ signMessage }: Props) {
   const { current: NO_ERROR } = useRef(Symbol());
   const [isSigningMessage, setIsSigningMessage] = useState(false);
   const [error, setError] = useState(NO_ERROR);
-  const [lastSignature, setLastSignature] = useState<ReadonlyUint8Array | undefined>();
+  const [lastSignature, setLastSignature] = useState<string | undefined>();
   const [text, setText] = useState<string>();
   return (
     <form
@@ -77,7 +77,7 @@ export function BaseSignMessageFeaturePanel({ signMessage }: Props) {
               <DataList.Item>
                 <DataList.Label minWidth="88px">Signature</DataList.Label>
                 <DataList.Value>
-                  <Code truncate>{getBase64Decoder().decode(lastSignature)}</Code>
+                  <Code truncate>{lastSignature}</Code>
                 </DataList.Value>
               </DataList.Item>
             </DataList.Root>

@@ -1,8 +1,8 @@
 import type { Address } from "@solana/kit";
 import { useWalletAccountMessageSigner } from "@solana/react";
-import type { ReadonlyUint8Array } from "@wallet-standard/core";
 import type { UiWalletAccount } from "@wallet-standard/react";
 import { useCallback } from "react";
+import bs58 from "bs58";
 
 import { BaseSignMessageFeaturePanel } from "./BaseSignMessageFeaturePanel";
 
@@ -14,19 +14,24 @@ async function signMessage(
   message: string,
   messageSigner: ReturnType<typeof useWalletAccountMessageSigner>,
   accountAddress: string
-): Promise<ReadonlyUint8Array> {
+): Promise<string> {
   const encodedMessage = new TextEncoder().encode(message);
-  const [result] = await messageSigner.modifyAndSignMessages([
+  // Oddly, there's only a modifyAndSignMessages (which accept an array of messages and returns an array of results) 
+  // but no singular modifyAndSignMessage. 
+  // TODO: should be fixed upstream.
+  const results = await messageSigner.modifyAndSignMessages([
     {
       content: encodedMessage as Uint8Array,
       signatures: {},
     },
   ]);
+  const result = results[0]
+
   const signature = result?.signatures[accountAddress as Address];
   if (!signature) {
-    throw new Error();
+    throw new Error(`Could not find signature for ${accountAddress}`);
   }
-  return signature as ReadonlyUint8Array;
+  return bs58.encode(signature as Uint8Array);
 }
 
 export function SolanaSignMessageFeaturePanel({ account }: Props) {
