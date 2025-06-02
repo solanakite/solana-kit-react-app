@@ -8,7 +8,7 @@ import { useRef, useState } from "react";
 import { ErrorDialog } from "../components/ErrorDialog";
 
 type Props = Readonly<{
-  signMessage(message: ReadonlyUint8Array): Promise<ReadonlyUint8Array>;
+  signMessage(message: string): Promise<ReadonlyUint8Array>;
 }>;
 
 export function BaseSignMessageFeaturePanel({ signMessage }: Props) {
@@ -25,11 +25,15 @@ export function BaseSignMessageFeaturePanel({ signMessage }: Props) {
           setError(NO_ERROR);
           setIsSigningMessage(true);
           try {
-            const signature = await signMessage(new TextEncoder().encode(text));
+            if (!text) {
+              throw new Error("Please enter a message to sign");
+            }
+            const signature = await signMessage(text);
             setLastSignature(signature);
           } catch (error) {
             setLastSignature(undefined);
-            setError(error);
+            // TODO: this is a hack to get the error type to work, we should just make set Error use real errors.
+            setError(error as unknown as symbol);
           } finally {
             setIsSigningMessage(false);
           }

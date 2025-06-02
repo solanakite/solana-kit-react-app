@@ -14,31 +14,30 @@ import { ChainContext } from "../context/ChainContext";
 import { ConnectionContext } from "../context/ConnectionContext";
 import { ErrorDialog } from "./ErrorDialog";
 
-const SYSTEM_PROGRAM_ADDRESS = "11111111111111111111111111111111";
+// mikemaccana.sol (reminder this is devnet)
+const DEFAULT_RECIPIENT_ADDRESS = "dDCQNnDmNbFVi8cQhKAgXhyhXeJ625tvwsunRyRc7c8";
+const DEFAULT_LAMPORTS = 7;
 
 type Props = Readonly<{
   account: UiWalletAccount;
 }>;
 
-function solStringToLamports(solQuantityString: string) {
-  if (Number.isNaN(parseFloat(solQuantityString))) {
-    throw new Error("Could not parse token quantity: " + String(solQuantityString));
+function parseLamports(lamportsString: string) {
+  if (Number.isNaN(Number(lamportsString))) {
+    throw new Error("Could not parse lamports quantity: " + String(lamportsString));
   }
-  const numDecimals = BigInt(solQuantityString.split(".")[1]?.length ?? 0);
-  const bigIntLamports = BigInt(solQuantityString.replace(".", "")) * 10n ** (9n - numDecimals);
-  return lamports(bigIntLamports);
+  return lamports(BigInt(lamportsString));
 }
 
 export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
   const { mutate } = useSWRConfig();
   const { current: NO_ERROR } = useRef(Symbol());
   const { connection } = useContext(ConnectionContext);
-  const wallets = useWallets();
   const [isSendingTransaction, setIsSendingTransaction] = useState(false);
   const [error, setError] = useState(NO_ERROR);
   const [lastSignature, setLastSignature] = useState<string | undefined>();
-  const [solQuantityString, setSolQuantityString] = useState<string>("");
-  const [recipientAddress, setRecipientAddress] = useState<string>(SYSTEM_PROGRAM_ADDRESS);
+  const [lamportsString, setLamportsString] = useState<string>(String(DEFAULT_LAMPORTS));
+  const [recipientAddress, setRecipientAddress] = useState<string>(DEFAULT_RECIPIENT_ADDRESS);
   const { chain: currentChain, solanaExplorerClusterName } = useContext(ChainContext);
   const transactionSendingSigner = useWalletAccountTransactionSendingSigner(account, currentChain);
   const lamportsInputId = useId();
@@ -50,7 +49,7 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
         setError(NO_ERROR);
         setIsSendingTransaction(true);
         try {
-          const amount = solStringToLamports(solQuantityString);
+          const amount = parseLamports(lamportsString);
           if (!recipientAddress) {
             throw new Error("Please enter a recipient address");
           }
@@ -69,8 +68,8 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
           void mutate({ address: transactionSendingSigner.address, chain: currentChain });
           void mutate({ address: recipientAddress, chain: currentChain });
           setLastSignature(signature);
-          setSolQuantityString("");
-          setRecipientAddress("");
+          setLamportsString(String(DEFAULT_LAMPORTS));
+          setRecipientAddress(DEFAULT_RECIPIENT_ADDRESS);
         } catch (error) {
           setLastSignature(undefined);
           setError(error as unknown as symbol);
@@ -82,13 +81,13 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
       <TextField.Root
         disabled={isSendingTransaction}
         id={lamportsInputId}
-        placeholder="Amount"
-        onChange={(event: SyntheticEvent<HTMLInputElement>) => setSolQuantityString(event.currentTarget.value)}
+        placeholder="Amount in lamports"
+        onChange={(event: SyntheticEvent<HTMLInputElement>) => setLamportsString(event.currentTarget.value)}
         style={{ width: "auto" }}
         type="number"
-        value={solQuantityString}
+        value={lamportsString}
       >
-        <TextField.Slot side="right">{"\u25ce"}</TextField.Slot>
+        <TextField.Slot side="right">lamports</TextField.Slot>
       </TextField.Root>
 
       <Text as="label" color="gray" htmlFor={recipientInputId} weight="medium">
@@ -114,7 +113,7 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
         <Dialog.Trigger>
           <Button
             color={error ? undefined : "red"}
-            disabled={solQuantityString === "" || !recipientAddress}
+            disabled={lamportsString === "" || !recipientAddress}
             loading={isSendingTransaction}
             type="submit"
           >
