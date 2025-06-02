@@ -1,4 +1,3 @@
-import type { Address } from "@solana/kit";
 import { useWalletAccountMessageSigner } from "@solana/react";
 import type { UiWalletAccount } from "@wallet-standard/react";
 import { useCallback } from "react";
@@ -13,7 +12,6 @@ type Props = Readonly<{
 async function signMessage(
   message: string,
   messageSigner: ReturnType<typeof useWalletAccountMessageSigner>,
-  accountAddress: string
 ): Promise<string> {
   const encodedMessage = new TextEncoder().encode(message);
   // Oddly, there's only a modifyAndSignMessages (which accept an array of messages and returns an array of results) 
@@ -27,9 +25,10 @@ async function signMessage(
   ]);
   const result = results[0]
 
-  const signature = result?.signatures[accountAddress as Address];
+  // Get the first (and should be only) signature from the result
+  const signature = Object.values(result?.signatures)[0];
   if (!signature) {
-    throw new Error(`Could not find signature for ${accountAddress}`);
+    throw new Error('Could not find signature in the result');
   }
   return bs58.encode(signature as Uint8Array);
 }
@@ -37,8 +36,8 @@ async function signMessage(
 export function SolanaSignMessageFeaturePanel({ account }: Props) {
   const messageSigner = useWalletAccountMessageSigner(account);
   const signMessageCallback = useCallback(
-    (message: string) => signMessage(message, messageSigner, account.address),
-    [account.address, messageSigner],
+    (message: string) => signMessage(message, messageSigner),
+    [messageSigner],
   );
   return <BaseSignMessageFeaturePanel signMessage={signMessageCallback} />;
 }
