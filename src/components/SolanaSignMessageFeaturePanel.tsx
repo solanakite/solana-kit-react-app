@@ -3,34 +3,14 @@ import { Blockquote, Button, Code, DataList, Dialog, TextField } from "@radix-ui
 import { useWalletAccountMessageSigner } from "@solana/react";
 import type { UiWalletAccount } from "@wallet-standard/react";
 import type { SyntheticEvent } from "react";
-import { useCallback, useRef, useState } from "react";
-import bs58 from "bs58";
-
+import { useCallback, useContext, useRef, useState } from "react";
+import { ConnectionContext } from "../context/ConnectionContext";
 import { ErrorDialog } from "./ErrorDialog";
 
 type Props = Readonly<{
   account: UiWalletAccount;
 }>;
 
-async function signMessage(
-  message: string,
-  messageSigner: ReturnType<typeof useWalletAccountMessageSigner>,
-): Promise<string> {
-  const encodedMessage = new TextEncoder().encode(message);
-  const results = await messageSigner.modifyAndSignMessages([
-    {
-      content: encodedMessage as Uint8Array,
-      signatures: {},
-    },
-  ]);
-  const result = results[0];
-
-  const signature = Object.values(result?.signatures)[0];
-  if (!signature) {
-    throw new Error('Could not find signature in the result');
-  }
-  return bs58.encode(signature as Uint8Array);
-}
 
 export function SolanaSignMessageFeaturePanel({ account }: Props) {
   const { current: NO_ERROR } = useRef(Symbol());
@@ -39,9 +19,10 @@ export function SolanaSignMessageFeaturePanel({ account }: Props) {
   const [lastSignature, setLastSignature] = useState<string | undefined>();
   const [text, setText] = useState<string>();
   const messageSigner = useWalletAccountMessageSigner(account);
+  const { connection } = useContext(ConnectionContext);
 
   const handleSignMessage = useCallback(async (message: string) => {
-    return signMessage(message, messageSigner);
+    return connection.signMessageFromWalletApp(message, messageSigner);
   }, [messageSigner]);
 
   return (
