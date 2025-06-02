@@ -5,8 +5,8 @@ import { ErrorBoundary } from "react-error-boundary";
 
 import { Balance } from "../components/Balance";
 import { FeatureNotSupportedCallout } from "../components/FeatureNotSupportedCallout";
-import { SolanaSignAndSendTransactionFeaturePanel } from "../components/SolanaSignAndSendTransactionFeaturePanel";
-import { SolanaSignMessageFeaturePanel } from "../components/SolanaSignMessageFeaturePanel";
+import { SignAndSendTransaction } from "../components/SignAndSendTransaction";
+import { SignMessage } from "../components/SignMessage";
 import { WalletAccountIcon } from "../components/WalletAccountIcon";
 import { ChainContext } from "../context/ChainContext";
 import { SelectedWalletAccountContext } from "../context/SelectedWalletAccountContext";
@@ -45,11 +45,12 @@ function Root() {
               </ErrorBoundary>
             </Flex>
           </Flex>
+
           <ErrorBoundary FallbackComponent={FeatureNotSupportedCallout} resetKeys={errorBoundaryResetKeys}>
-            <SolanaSignMessageFeaturePanel account={selectedWalletAccount} />
+            <SignAndSendTransaction account={selectedWalletAccount} />
           </ErrorBoundary>
           <ErrorBoundary FallbackComponent={FeatureNotSupportedCallout} resetKeys={errorBoundaryResetKeys}>
-            <SolanaSignAndSendTransactionFeaturePanel account={selectedWalletAccount} />
+            <SignMessage account={selectedWalletAccount} />
           </ErrorBoundary>
         </Flex>
       ) : (

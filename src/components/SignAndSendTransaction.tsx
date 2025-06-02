@@ -29,7 +29,7 @@ function parseLamports(lamportsString: string) {
   return lamports(BigInt(lamportsString));
 }
 
-export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
+export function SignAndSendTransaction({ account }: Props) {
   const { mutate } = useSWRConfig();
   const { current: NO_ERROR } = useRef(Symbol());
   const [error, setError] = useState(NO_ERROR);

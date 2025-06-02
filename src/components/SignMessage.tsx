@@ -10,7 +10,7 @@ type Props = Readonly<{
   account: UiWalletAccount;
 }>;
 
-export function SolanaSignMessageFeaturePanel({ account }: Props) {
+export function SignMessage({ account }: Props) {
   const { current: NO_ERROR } = useRef(Symbol());
   const [isSigningMessage, setIsSigningMessage] = useState(false);
   const [error, setError] = useState(NO_ERROR);
