@@ -10,7 +10,7 @@ This is an example of how to use `@solana/kit` and `@solana/react` to build a Re
 - Connects to browser wallets that support the Wallet Standard; one or more at a time
 - Fetches and subscribes to the balance of the selected wallet
 - Allows you to sign an arbitrary message using a wallet account
-- Allows you to make a transfer from the selected wallet to any other connected wallet
+- Allows you to make a transfer from the selected wallet to any other wallet
 
 ## Developing
 

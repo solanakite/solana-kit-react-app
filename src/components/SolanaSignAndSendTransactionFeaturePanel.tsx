@@ -1,21 +1,20 @@
-import { Blockquote, Button, Dialog, Link, Select, Text, TextField } from "@radix-ui/themes";
+import { Blockquote, Button, Dialog, Link, Text, TextField } from "@radix-ui/themes";
 import {
   address,
-  getBase58Decoder,
   lamports,
-  signature,
 } from "@solana/kit";
 import { useWalletAccountTransactionSendingSigner } from "@solana/react";
 import { getTransferSolInstruction } from "@solana-program/system";
-import { getUiWalletAccountStorageKey, type UiWalletAccount, useWallets } from "@wallet-standard/react";
+import { type UiWalletAccount, useWallets } from "@wallet-standard/react";
 import type { SyntheticEvent } from "react";
-import { useContext, useId, useMemo, useRef, useState } from "react";
+import { useContext, useId, useRef, useState } from "react";
 import { useSWRConfig } from "swr";
 
 import { ChainContext } from "../context/ChainContext";
 import { ConnectionContext } from "../context/ConnectionContext";
 import { ErrorDialog } from "./ErrorDialog";
-import { WalletMenuItemContent } from "./WalletMenuItemContent";
+
+const SYSTEM_PROGRAM_ADDRESS = "11111111111111111111111111111111";
 
 type Props = Readonly<{
   account: UiWalletAccount;
@@ -39,22 +38,11 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
   const [error, setError] = useState(NO_ERROR);
   const [lastSignature, setLastSignature] = useState<string | undefined>();
   const [solQuantityString, setSolQuantityString] = useState<string>("");
-  const [recipientAccountStorageKey, setRecipientAccountStorageKey] = useState<string | undefined>();
-  const recipientAccount = useMemo(() => {
-    if (recipientAccountStorageKey) {
-      for (const wallet of wallets) {
-        for (const account of wallet.accounts) {
-          if (getUiWalletAccountStorageKey(account) === recipientAccountStorageKey) {
-            return account;
-          }
-        }
-      }
-    }
-  }, [recipientAccountStorageKey, wallets]);
+  const [recipientAddress, setRecipientAddress] = useState<string>(SYSTEM_PROGRAM_ADDRESS);
   const { chain: currentChain, solanaExplorerClusterName } = useContext(ChainContext);
   const transactionSendingSigner = useWalletAccountTransactionSendingSigner(account, currentChain);
   const lamportsInputId = useId();
-  const recipientSelectId = useId();
+  const recipientInputId = useId();
   return (
     <form
       onSubmit={async (event) => {
@@ -63,13 +51,13 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
         setIsSendingTransaction(true);
         try {
           const amount = solStringToLamports(solQuantityString);
-          if (!recipientAccount) {
-            throw new Error("The address of the recipient could not be found");
+          if (!recipientAddress) {
+            throw new Error("Please enter a recipient address");
           }
 
           const sendSolInstruction = getTransferSolInstruction({
             amount,
-            destination: address(recipientAccount.address),
+            destination: address(recipientAddress),
             source: transactionSendingSigner,
           });
 
@@ -79,9 +67,10 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
           });
 
           void mutate({ address: transactionSendingSigner.address, chain: currentChain });
-          void mutate({ address: recipientAccount.address, chain: currentChain });
+          void mutate({ address: recipientAddress, chain: currentChain });
           setLastSignature(signature);
           setSolQuantityString("");
+          setRecipientAddress("");
         } catch (error) {
           setLastSignature(undefined);
           setError(error as unknown as symbol);
@@ -102,34 +91,17 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
         <TextField.Slot side="right">{"\u25ce"}</TextField.Slot>
       </TextField.Root>
 
-      <Text as="label" color="gray" htmlFor={recipientSelectId} weight="medium">
-        To Account
+      <Text as="label" color="gray" htmlFor={recipientInputId} weight="medium">
+        To Address
       </Text>
 
-      <Select.Root
+      <TextField.Root
         disabled={isSendingTransaction}
-        onValueChange={setRecipientAccountStorageKey}
-        value={recipientAccount ? getUiWalletAccountStorageKey(recipientAccount) : undefined}
-      >
-        <Select.Trigger
-          style={{ flexGrow: 1, flexShrink: 1, overflow: "hidden" }}
-          placeholder="Select a Connected Account"
-        />
-        <Select.Content>
-          {wallets.flatMap((wallet) =>
-            wallet.accounts
-              .filter(({ chains }) => chains.includes(currentChain))
-              .map((account) => {
-                const key = getUiWalletAccountStorageKey(account);
-                return (
-                  <Select.Item key={key} value={key}>
-                    <WalletMenuItemContent wallet={wallet}>{account.address}</WalletMenuItemContent>
-                  </Select.Item>
-                );
-              }),
-          )}
-        </Select.Content>
-      </Select.Root>
+        id={recipientInputId}
+        placeholder="Enter recipient's Solana address"
+        onChange={(event: SyntheticEvent<HTMLInputElement>) => setRecipientAddress(event.currentTarget.value)}
+        value={recipientAddress}
+      />
 
       <Dialog.Root
         open={Boolean(lastSignature)}
@@ -142,7 +114,7 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
         <Dialog.Trigger>
           <Button
             color={error ? undefined : "red"}
-            disabled={solQuantityString === "" || !recipientAccount}
+            disabled={solQuantityString === "" || !recipientAddress}
             loading={isSendingTransaction}
             type="submit"
           >
