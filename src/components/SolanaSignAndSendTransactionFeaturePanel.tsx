@@ -3,6 +3,7 @@ import {
   address,
   getBase58Decoder,
   lamports,
+  signature,
 } from "@solana/kit";
 import { useWalletAccountTransactionSendingSigner } from "@solana/react";
 import { getTransferSolInstruction } from "@solana-program/system";
@@ -36,7 +37,7 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
   const wallets = useWallets();
   const [isSendingTransaction, setIsSendingTransaction] = useState(false);
   const [error, setError] = useState(NO_ERROR);
-  const [lastSignature, setLastSignature] = useState<Uint8Array | undefined>();
+  const [lastSignature, setLastSignature] = useState<string | undefined>();
   const [solQuantityString, setSolQuantityString] = useState<string>("");
   const [recipientAccountStorageKey, setRecipientAccountStorageKey] = useState<string | undefined>();
   const recipientAccount = useMemo(() => {
@@ -72,14 +73,10 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
             source: transactionSendingSigner,
           });
 
-          const signatureBase58 = await connection.sendTransactionFromInstructionsWithWalletApp({
+          const signature = await connection.sendTransactionFromInstructionsWithWalletApp({
             instructions: [sendSolInstruction],
             feePayer: transactionSendingSigner,
           });
-
-          // TODO: Normally we would consider 'signature' to be base58, this existing app uses 
-          // bytes, we should probably just fix this app.
-          const signature = connection.signatureBase58StringToBytes(signatureBase58);
 
           void mutate({ address: transactionSendingSigner.address, chain: currentChain });
           void mutate({ address: recipientAccount.address, chain: currentChain });
@@ -160,12 +157,10 @@ export function SolanaSignAndSendTransactionFeaturePanel({ account }: Props) {
           >
             <Dialog.Title>You transferred tokens!</Dialog.Title>
             <Text>Signature:</Text>
-            <Blockquote>{getBase58Decoder().decode(lastSignature)}</Blockquote>
+            <Blockquote>{lastSignature}</Blockquote>
             <Text>
               <Link
-                href={`https://explorer.solana.com/tx/${getBase58Decoder().decode(
-                  lastSignature,
-                )}?cluster=${solanaExplorerClusterName}`}
+                href={connection.getExplorerLink('transaction', lastSignature)}
                 target="_blank"
               >
                 View this transaction
