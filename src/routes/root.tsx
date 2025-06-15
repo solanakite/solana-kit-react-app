@@ -1,4 +1,4 @@
-import { Box, Code, Container, DataList, Flex, Heading, Spinner, Text } from "@radix-ui/themes";
+import { Box, Code, Container, Flex, Heading, Spinner, Text } from "@radix-ui/themes";
 import { getUiWalletAccountStorageKey } from "@wallet-standard/react";
 import { Suspense, useContext } from "react";
 import { ErrorBoundary } from "react-error-boundary";
