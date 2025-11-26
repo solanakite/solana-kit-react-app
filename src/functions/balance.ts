@@ -2,79 +2,34 @@ import { Address, Lamports } from "@solana/kit";
 import { SWRSubscription } from "swr/subscription";
 import { Connection } from "solana-kite";
 
-const EXPLICIT_ABORT_TOKEN = Symbol();
-
 /**
- * This is an example of a strategy to fetch some account data and to keep it up to date over time.
- * It's implemented as an SWR subscription function (https://swr.vercel.app/docs/subscription) but
- * the approach is generalizable.
+ * Watches for real-time changes to SOL balances using the new Kite watchLamportBalance function.
+ * This replaces the previous custom subscription implementation with the official Kite method.
  *
- *     1. Fetch the current account state and publish it to the consumer
- *     2. Subscribe to account data notifications and publish them to the consumer
- *
- * At all points in time, check that the update you received -- no matter from where -- is from a
- * higher slot (ie. is newer) than the last one you published to the consumer.
+ * The function uses Kite's watchLamportBalance which:
+ * 1. Fetches the current balance immediately and calls the callback
+ * 2. Subscribes to ongoing updates and calls the callback whenever the balance changes
+ * 3. Returns a cleanup function to stop watching
  */
 export function balanceSubscribe(
   connection: Connection,
   ...subscriptionArgs: Parameters<SWRSubscription<{ address: Address }, Lamports>>
 ) {
   const [{ address }, { next }] = subscriptionArgs;
-  const abortController = new AbortController();
-  // Keep track of the slot of the last-published update.
-  let lastUpdateSlot = -1n;
 
-  // Fetch the current balance of this account.
-  (async () => {
-    try {
-      const { context: { slot }, value: lamports } = await connection.rpc
-        .getBalance(address, { commitment: "confirmed" })
-        .send({ abortSignal: abortController.signal });
-
-      if (slot < lastUpdateSlot) {
-        // The last-published update (ie. from the subscription) is newer than this one.
-        return;
-      }
-      lastUpdateSlot = slot;
-      next(null /* err */, lamports /* data */);
-    } catch (error) {
-      if (error !== EXPLICIT_ABORT_TOKEN) {
+  // Use the new Kite watchLamportBalance function
+  const stopWatching = connection.watchLamportBalance(
+    address,
+    (error, balance) => {
+      if (error) {
         next(error);
+      } else if (balance !== null) {
+        next(null /* err */, balance /* data */);
       }
+      // If balance is null, we ignore the update (shouldn't happen in normal operation)
     }
-  })();
+  );
 
-  // Subscribe for updates to that balance.
-  (async () => {
-    try {
-      const accountInfoNotifications = await connection.rpcSubscriptions
-        .accountNotifications(address)
-        .subscribe({ abortSignal: abortController.signal });
-
-      try {
-        for await (const {
-          context: { slot },
-          value: { lamports },
-        } of accountInfoNotifications) {
-          if (slot < lastUpdateSlot) {
-            // The last-published update (ie. from the initial fetch) is newer than this one.
-            continue;
-          }
-          lastUpdateSlot = slot;
-          next(null /* err */, lamports /* data */);
-        }
-      } catch (error) {
-        next(error);
-      }
-    } catch (error) {
-      if (error !== EXPLICIT_ABORT_TOKEN) {
-        next(error);
-      }
-    }
-  })();
-
-  // Return a cleanup callback that aborts the RPC call/subscription.
-  return () => {
-    abortController.abort(EXPLICIT_ABORT_TOKEN);
-  };
+  // Return the cleanup function from watchLamportBalance
+  return stopWatching;
 }
