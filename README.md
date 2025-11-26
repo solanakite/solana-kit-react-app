@@ -18,7 +18,7 @@ Start a server in development mode.
 
 ```shell
 npm install
-npm dev
+npm run dev
 ```
 
 Press <kbd>o</kbd> + <kbd>Enter</kbd> to open the app in a browser. Edits to the source code will automatically reload the app.
